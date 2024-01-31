@@ -12,6 +12,8 @@ License:        GPL 3.0
 URL:            https://github.com/GSI-HPC/prometheus-pvdisplay-exporter
 Source0:        %{name}-%{version}.tar.gz
 
+Requires(pre): shadow-utils
+
 Requires(post): systemd
 Requires(preun): systemd
 Requires(postun): systemd
@@ -40,6 +42,14 @@ cp -a * %{buildroot}
 %clean
 rm -rf %{buildroot}
 
+%pre
+getent group prometheus >/dev/null || groupadd -r prometheus
+getent passwd prometheus >/dev/null || \
+    useradd -r -g prometheus -d /dev/null -s /sbin/nologin \
+        -c "Prometheus Monitoring" prometheus
+cp etc/sudoers.d/%{name} /etc/sudoers.d/%{name}
+exit 0
+
 %post
 systemctl enable %{name}.service
 systemctl start %{name}.service
@@ -52,5 +62,6 @@ systemctl start %{name}.service
 
 %files
 %defattr(-,root,root,-)
+%attr(0440, root, root) /etc/sudoers.d/prometheus-pvdisplay-exporter
 %{_sbindir}/prometheus-pvdisplay-exporter
 %{_unitdir}/%{name}.service
