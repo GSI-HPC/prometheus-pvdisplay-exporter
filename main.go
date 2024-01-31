@@ -9,10 +9,14 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
+	"prometheus-pvdisplay-exporter/collector"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	log "github.com/sirupsen/logrus"
@@ -21,7 +25,11 @@ import (
 const (
 	defaultPort     = "9259"
 	defaultLogLevel = "ERROR"
-	version         = "0.0.1"
+)
+
+var (
+	//go:embed VERSION
+	exporterVersion string
 )
 
 func initLogging(logLevel string) {
@@ -44,12 +52,21 @@ func initLogging(logLevel string) {
 }
 
 func main() {
+
 	port := flag.String("port", defaultPort, "The port to listen on for HTTP requests")
 	logLevel := flag.String("log", defaultLogLevel, "Sets log level - ERROR, WARNING, INFO, DEBUG or TRACE")
+	printVersion := flag.Bool("version", false, "Print version")
 
 	flag.Parse()
 
+	if *printVersion {
+		fmt.Print(exporterVersion)
+		os.Exit(0)
+	}
+
 	initLogging(*logLevel)
+
+	prometheus.MustRegister(collector.NewPvdisplayCollector())
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":"+*port, nil)

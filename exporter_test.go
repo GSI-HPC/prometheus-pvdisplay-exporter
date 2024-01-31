@@ -20,7 +20,7 @@ func TestExtractPvdisplayItems(t *testing.T) {
 		"/dev/disk/by-id/scsi-3600062b20854afc029a65252775956fa mds00vg lvm2 a--  19201016201216B 8205899923456B\n" +
 			"/dev/sdb   mds01vg lvm2 a--  19201016201216B 8205899923456B"
 
-	pvDisplayItems, err := collector.ExtractPvdisplayItems(pvdisplayData)
+	pvDisplayItems, err := collector.ExtractPvdisplayItems(&pvdisplayData)
 	if err != nil {
 		t.Error(err)
 	}
@@ -29,18 +29,17 @@ func TestExtractPvdisplayItems(t *testing.T) {
 	if lenPvdisplayData != 2 {
 		t.Errorf("Expected 2 items in pvDisplayItems, but got: %d", lenPvdisplayData)
 	}
-
 }
 
 func TestParsePvdisplayItems(t *testing.T) {
 
 	m := make(map[string]collector.PvdisplayItem) // [pvdisplayRawString]expectedPvdisplayItem
-	m["/dev/disk/by-id/scsi-3600062b20854afc029a65252775956fa mds00vg lvm2 a--  19201016201216B 8205899923456B"] = collector.PvdisplayItem{"mds00vg", 19201016201216, 8205899923456}
-	m["/dev/sdb   mds01vg lvm2 a--  19201016201216B 8205899923456B"] = collector.PvdisplayItem{"mds01vg", 19201016201216, 8205899923456}
+	m["/dev/disk/by-id/scsi-3600062b20854afc029a65252775956fa mds00vg lvm2 a--  19201016201216B 8205899923456B"] = collector.PvdisplayItem{Vg: "mds00vg", PSize: 19201016201216, PFree: 8205899923456}
+	m["/dev/sdb   mds01vg lvm2 a--  19201016201216B 8205899923456B"] = collector.PvdisplayItem{Vg: "mds01vg", PSize: 19201016201216, PFree: 8205899923456}
 
 	for pvdisplayData, expected := range m {
 
-		pvDisplayItems, err := collector.ExtractPvdisplayItems(pvdisplayData)
+		pvDisplayItems, err := collector.ExtractPvdisplayItems(&pvdisplayData)
 
 		if err != nil {
 			t.Error(err)
@@ -65,5 +64,4 @@ func TestParsePvdisplayItems(t *testing.T) {
 			t.Errorf("Expected PFree %f, got %f", expected.PFree, pvDisplayItem.PFree)
 		}
 	}
-
 }

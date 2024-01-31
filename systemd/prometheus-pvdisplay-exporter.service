@@ -1,0 +1,10 @@
+[Unit]
+Description=Prometheus pvdisplay Exporter
+
+[Service]
+ExecStart=/usr/sbin/prometheus-pvdisplay-exporter
+User=root
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

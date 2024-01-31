@@ -10,13 +10,17 @@ package collector
 
 import (
 	"fmt"
+	"prometheus-pvdisplay-exporter/util"
 	"regexp"
 	"strconv"
+
+	"github.com/prometheus/client_golang/prometheus"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
-	Namespace = "pvdisplay"
-	CliTool   = "pvdisplay"
+	CliTool = "pvdisplay"
 )
 
 var (
@@ -24,6 +28,20 @@ var (
 	pvdisplayVgIndex    = pvdisplayRegex.SubexpIndex("vg")
 	pvdisplayPSizeIndex = pvdisplayRegex.SubexpIndex("psize")
 	pvdisplayPFreeIndex = pvdisplayRegex.SubexpIndex("pfree")
+
+	pvdisplayPSizeDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(Namespace, "collector", "psize"),
+		"PSize for a given VG",
+		[]string{"vg"},
+		nil,
+	)
+
+	pvdisplayPFreeDesc = prometheus.NewDesc(
+		prometheus.BuildFQName(Namespace, "collector", "pfree"),
+		"PFree for a given VG",
+		[]string{"vg"},
+		nil,
+	)
 )
 
 type PvdisplayItem struct {
@@ -32,7 +50,47 @@ type PvdisplayItem struct {
 	PFree float64
 }
 
+type PvdisplayCollector struct{}
+
+func NewPvdisplayCollector() prometheus.Collector {
+	return &PvdisplayCollector{}
+}
+
+func (c *PvdisplayCollector) Collect(ch chan<- prometheus.Metric) {
+
+	log.Debug("Collecting pvdisplay data")
+
+	data, err := util.ExecuteCommandWithSudo(CliTool, "--units", "b", "-C", "--noheadings")
+
+	if err != nil {
+		log.Error(err)
+		ch <- createErrorMetric()
+		return
+	}
+
+	items, err := ExtractPvdisplayItems(data)
+
+	if err != nil {
+		log.Error(err)
+		ch <- createErrorMetric()
+		return
+	}
+
+	for _, item := range items {
+		ch <- c.createMetric(pvdisplayPSizeDesc, item.Vg, item.PSize)
+		ch <- c.createMetric(pvdisplayPFreeDesc, item.Vg, item.PFree)
+	}
+}
+
+func (c *PvdisplayCollector) Describe(ch chan<- *prometheus.Desc) {
+}
+
+func (c *PvdisplayCollector) createMetric(desc *prometheus.Desc, vg string, val float64) prometheus.Metric {
+	return prometheus.MustNewConstMetric(desc, prometheus.GaugeValue, val, vg)
+}
+
 func newPvdisplayItem(vg string, psize float64, pfree float64) (*PvdisplayItem, error) {
+
 	if vg == "" {
 		return nil, fmt.Errorf("vg argument empty")
 	}
@@ -44,12 +102,13 @@ func newPvdisplayItem(vg string, psize float64, pfree float64) (*PvdisplayItem, 
 	return &PvdisplayItem{vg, psize, pfree}, nil
 }
 
-func ExtractPvdisplayItems(data string) ([]PvdisplayItem, error) {
+func ExtractPvdisplayItems(data *string) ([]PvdisplayItem, error) {
+
 	slice := make([]PvdisplayItem, 0, 2)
-	matchedItems := pvdisplayRegex.FindAllStringSubmatch(data, -1)
+	matchedItems := pvdisplayRegex.FindAllStringSubmatch(*data, -1)
 
 	if matchedItems == nil {
-		return nil, fmt.Errorf("pvdisplayRegex missmatch on data:\n%s", data)
+		return nil, fmt.Errorf("pvdisplayRegex missmatch on data:\n%s", *data)
 	}
 
 	for _, mItem := range matchedItems {
