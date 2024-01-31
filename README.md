@@ -2,9 +2,15 @@
 
 ## Building
 
-### Exporter
+### Binary
 
 `go build`
+
+### RPM Package
+
+`rpm/build.sh`
+
+> Must be executed from the project directory
 
 ## Requirements
 
