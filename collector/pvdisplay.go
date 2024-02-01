@@ -30,15 +30,15 @@ var (
 	pvdisplayPFreeIndex = pvdisplayRegex.SubexpIndex("pfree")
 
 	pvdisplayPSizeDesc = prometheus.NewDesc(
-		prometheus.BuildFQName(Namespace, "collector", "psize"),
-		"PSize for a given VG",
+		prometheus.BuildFQName(Namespace, "", "psize"),
+		"PSize for given VG",
 		[]string{"vg"},
 		nil,
 	)
 
 	pvdisplayPFreeDesc = prometheus.NewDesc(
-		prometheus.BuildFQName(Namespace, "collector", "pfree"),
-		"PFree for a given VG",
+		prometheus.BuildFQName(Namespace, "", "pfree"),
+		"PFree for given VG",
 		[]string{"vg"},
 		nil,
 	)
