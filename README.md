@@ -15,3 +15,13 @@
 ## Requirements
 
 CLI tool `pvdisplay` installed on the target host.
+
+## Metrics
+
+All metrics are prefixed with "pvdisplay_".
+
+| Metric | Labels | Description                  |
+| ------ | ------ | ---------------------------- |
+| error  | -      | Set if an error has occurred |
+| psize  | vg     | PSize for given VG           |
+| pfree  | vg     | PFree for given VG           |
