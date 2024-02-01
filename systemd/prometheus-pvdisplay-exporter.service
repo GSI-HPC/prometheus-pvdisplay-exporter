@@ -3,7 +3,7 @@ Description=Prometheus pvdisplay Exporter
 
 [Service]
 ExecStart=/usr/sbin/prometheus-pvdisplay-exporter
-User=root
+User=prometheus
 Restart=always
 
 [Install]
