@@ -34,7 +34,7 @@ mkdir -p $BUILD_DIR/SOURCES/$PKG_DIR/etc/sudoers.d
 
 go build
 
-sed "s/VERSION/$(cat VERSION)/" rpm/prometheus-pvdisplay-exporter.spec > $BUILD_DIR/SPECS/prometheus-pvdisplay-exporter.spec
+sed "s/VERSION/$(cat VERSION)/" rpm/prometheus-pvdisplay-exporter.spec > $BUILD_SPEC
 
 cp systemd/prometheus-pvdisplay-exporter.service $BUILD_DIR/SOURCES/$PKG_DIR/usr/lib/systemd/system/
 cp sudoers/prometheus-pvdisplay-exporter $BUILD_DIR/SOURCES/$PKG_DIR/etc/sudoers.d/
